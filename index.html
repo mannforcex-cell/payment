@@ -1,0 +1,825 @@
+ <!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Payment System - Mann Force X">
+    <title>ğ�™�ğ�˜¼ğ�™†ğ�™„ğ�™� ğ�™”ğ�˜¼ğ�™‰ğ�™‚ ğ�˜½ğ�™€ğ�™�ğ�™�ğ�˜½ğ�˜¼ğ�™ƒ-ğ�™ˆğ�˜¼ğ�™‰ğ�™‰ ğ�™�ğ�™Šğ�™�ğ�˜¾ğ�™€</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="icon" type="image/x-icon" href="https://files.catbox.moe/i6y0r2.mp4">
+    <style>
+        /* Reset & Base */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: #0a0a1a;
+            color: #fff;
+            overflow-x: hidden;
+            min-height: 100vh;
+        }
+        
+        /* Video Background */
+        #background-video {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            z-index: -1;
+            opacity: 0.4;
+        }
+        
+        /* Loading Screen */
+        #loading-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #0a0a1a, #1a1a3a);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            transition: opacity 0.5s ease;
+        }
+        
+        .game-loading-container {
+            text-align: center;
+            position: relative;
+            width: min(90%, 300px);
+        }
+        
+        .game-progress-bar {
+            width: 100%;
+            height: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            margin: 20px 0;
+            overflow: hidden;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+        }
+        
+        .game-progress {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, #ff00cc, #3333ff, #00ccff);
+            border-radius: 8px;
+            transition: width 0.3s ease;
+            box-shadow: 0 0 10px rgba(255, 0, 204, 0.5);
+        }
+        
+        .game-loading-text {
+            font-size: clamp(16px, 4vw, 18px);
+            color: #fff;
+            letter-spacing: 2px;
+            margin-bottom: 10px;
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.7);
+            font-family: 'Courier New', monospace;
+        }
+        
+        .game-stats {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            margin-top: 10px;
+            font-size: 14px;
+            color: #aaa;
+        }
+        
+        .game-icon {
+            font-size: clamp(40px, 10vw, 50px);
+            margin-bottom: 20px;
+            color: #ff00cc;
+            text-shadow: 0 0 15px rgba(255, 0, 204, 0.7);
+            animation: bounce 1s infinite alternate;
+        }
+        
+        @keyframes bounce {
+            from { transform: translateY(0); }
+            to { transform: translateY(-10px); }
+        }
+        
+        .game-tip {
+            margin-top: 20px;
+            font-style: italic;
+            color: #888;
+            font-size: clamp(12px, 3vw, 14px);
+        }
+        
+        /* Welcome Screen */
+        #welcome-screen {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(10, 10, 26, 0.95);
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 9998;
+            text-align: center;
+            padding: 20px;
+        }
+        
+        .welcome-title {
+            font-size: clamp(2rem, 8vw, 3.5rem);
+            margin-bottom: 30px;
+            background: linear-gradient(90deg, #ff00cc, #3333ff, #00ccff);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 0 10px rgba(255, 0, 204, 0.5);
+            animation: glow 2s ease-in-out infinite alternate;
+            line-height: 1.2;
+        }
+        
+        @keyframes glow {
+            from { text-shadow: 0 0 10px rgba(255, 0, 204, 0.5); }
+            to { text-shadow: 0 0 20px rgba(255, 0, 204, 0.8), 0 0 30px rgba(51, 51, 255, 0.6); }
+        }
+        
+        /* Buttons */
+        .go-to-pay-btn {
+            background: linear-gradient(90deg, #ff00cc, #3333ff);
+            border: none;
+            padding: 18px 50px;
+            font-size: clamp(1rem, 4vw, 1.3rem);
+            color: white;
+            border-radius: 50px;
+            cursor: pointer;
+            margin: 30px 0;
+            transition: all 0.3s ease;
+            box-shadow: 0 0 20px rgba(255, 0, 204, 0.5);
+            position: relative;
+            overflow: hidden;
+            font-weight: bold;
+            letter-spacing: 1px;
+        }
+        
+        .go-to-pay-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+            transition: 0.5s;
+        }
+        
+        .go-to-pay-btn:hover::before { 
+            left: 100%; 
+        }
+        
+        .go-to-pay-btn:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 0 30px rgba(255, 0, 204, 0.8);
+        }
+        
+        /* Quote */
+        .quote {
+            max-width: min(90%, 600px);
+            font-style: italic;
+            color: #aaa;
+            margin-top: 20px;
+            line-height: 1.6;
+            font-size: clamp(0.9rem, 3vw, 1.1rem);
+            text-shadow: 0 0 5px rgba(255, 255, 255, 0.3);
+        }
+        
+        /* Payment Screen */
+        #payment-screen {
+            display: none;
+            padding: 40px 20px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        .payment-title {
+            text-align: center;
+            font-size: clamp(1.5rem, 6vw, 2.5rem);
+            margin-bottom: 40px;
+            background: linear-gradient(90deg, #ff00cc, #3333ff);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 0 10px rgba(255, 0, 204, 0.5);
+            line-height: 1.2;
+        }
+        
+        /* Payment Method Cards */
+        .payment-method {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 0 15px rgba(255, 0, 204, 0.2);
+            transition: all 0.3s ease;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .payment-method:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 0 20px rgba(255, 0, 204, 0.4);
+        }
+        
+        .payment-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .payment-logo {
+            width: 40px;
+            height: 40px;
+            margin-right: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            flex-shrink: 0;
+        }
+        
+        .payment-name {
+            font-size: clamp(1rem, 4vw, 1.3rem);
+            font-weight: bold;
+        }
+        
+        .payment-details {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .payment-number {
+            font-family: monospace;
+            font-size: clamp(0.9rem, 3vw, 1.1rem);
+            word-break: break-all;
+        }
+        
+        .unavailable {
+            color: #888;
+            font-style: italic;
+        }
+        
+        /* Copy Button */
+        .copy-btn {
+            background: linear-gradient(90deg, #ff00cc, #3333ff);
+            border: none;
+            padding: 8px 15px;
+            color: white;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 0 10px rgba(255, 0, 204, 0.3);
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+        
+        .copy-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 0 15px rgba(255, 0, 204, 0.5);
+        }
+        
+        /* QRIS Section */
+        .qris-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-top: 10px;
+        }
+        
+        .qris-image {
+            max-width: 200px;
+            width: 100%;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            box-shadow: 0 0 15px rgba(255, 255, 255, 0.3);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .qris-buttons {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        
+        .qris-btn {
+            background: linear-gradient(90deg, #ff00cc, #3333ff);
+            border: none;
+            padding: 8px 15px;
+            color: white;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 0 10px rgba(255, 0, 204, 0.3);
+        }
+        
+        .qris-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 0 15px rgba(255, 0, 204, 0.5);
+        }
+        
+        /* Contacts Section */
+        .contacts-section {
+            margin-top: 50px;
+            text-align: center;
+        }
+        
+        .contacts-title {
+            font-size: clamp(1.5rem, 6vw, 2rem);
+            margin-bottom: 30px;
+            background: linear-gradient(90deg, #ff00cc, #3333ff);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 0 10px rgba(255, 0, 204, 0.5);
+        }
+        
+        .contact-links {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            flex-wrap: wrap;
+        }
+        
+        .contact-link {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-decoration: none;
+            color: #fff;
+            transition: all 0.3s ease;
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            padding: 15px 25px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(255, 0, 204, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            min-width: 120px;
+        }
+        
+        .contact-link:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 0 20px rgba(255, 0, 204, 0.4);
+        }
+        
+        .contact-text {
+            font-size: 0.9rem;
+            margin-top: 5px;
+        }
+        
+        /* Toast Notification */
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 5px;
+            z-index: 10000;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            box-shadow: 0 0 15px rgba(255, 0, 204, 0.5);
+            pointer-events: none;
+        }
+        
+        .toast.show { 
+            opacity: 1; 
+        }
+        
+        /* Audio Control */
+        .audio-control {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            z-index: 100;
+            box-shadow: 0 0 10px rgba(255, 0, 204, 0.3);
+            transition: all 0.3s ease;
+        }
+        
+        .audio-control:hover {
+            transform: scale(1.1);
+            box-shadow: 0 0 15px rgba(255, 0, 204, 0.5);
+        }
+        
+        .audio-control i { 
+            font-size: 1.5rem; 
+            color: #fff; 
+        }
+        
+        /* QRIS Modal */
+        #qris-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.9);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        .modal-container {
+            position: relative;
+            max-width: 80%;
+            max-height: 80%;
+        }
+        
+        #close-modal {
+            position: absolute;
+            top: -15px;
+            right: -15px;
+            background: #ff00cc;
+            border: none;
+            color: white;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            .payment-details {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .copy-btn {
+                align-self: stretch;
+                text-align: center;
+            }
+            
+            .contact-links {
+                gap: 15px;
+            }
+            
+            .contact-link {
+                padding: 12px 20px;
+                min-width: 100px;
+            }
+            
+            .modal-container {
+                max-width: 95%;
+                max-height: 95%;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .go-to-pay-btn {
+                padding: 15px 30px;
+            }
+            
+            .payment-method {
+                padding: 15px;
+            }
+            
+            .qris-buttons {
+                flex-direction: column;
+                width: 100%;
+            }
+            
+            .qris-btn {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Video Background -->
+    <video id="background-video" autoplay muted loop playsinline>
+        <source src="https://files.catbox.moe/i6y0r2.mp4" type="video/mp4">
+    </video>
+    
+    <!-- Background Audio -->
+    <audio id="background-audio" loop>
+        <source src="https://trcminer.com/?agent_id=rashidyeop714" type="audio/mp4">
+    </audio>
+    
+    <!-- Audio Control -->
+    <div class="audio-control" id="audio-control" aria-label="Audio control">
+        <i class="fas fa-volume-up"></i>
+    </div>
+    
+    <!-- Loading Screen -->
+    <div id="loading-screen" role="status" aria-label="Loading payment system">
+        <div class="game-loading-container">
+            <div class="game-icon"><i class="fas fa-gamepad"></i></div>
+            <div class="game-loading-text">LOADING PAYMENT</div>
+            <div class="game-progress-bar">
+                <div class="game-progress" id="game-progress"></div>
+            </div>
+            <div class="game-stats">
+                <span id="loading-status">Initializing...</span>
+                <span id="progress-percent">0%</span>
+            </div>
+            <div class="game-tip" id="loading-tip">Preparing secure payment environment...</div>
+        </div>
+    </div>
+    
+    <!-- Welcome Screen -->
+    <div id="welcome-screen">
+        <h1 class="welcome-title">Welcome to Payment Mann Force X</h1>
+        <button class="go-to-pay-btn" id="go-to-pay-btn">ğ�™‚ğ�™¤ ğ�™�ğ�™¤ ğ�™‹ğ�™–ğ�™®</button>
+        <p class="quote">"Failure is not the opposite of success, but a part of the process towards ğ�˜´ğ�˜¶ğ�˜¤ğ�˜¤ğ�˜¦ğ�˜´ğ�˜´"</p>
+    </div>
+    
+    <!-- Payment Screen -->
+    <div id="payment-screen">
+        <h1 class="payment-title">ğ�™’ğ�™€ğ�™‡ğ�™‡ğ�˜¾ğ�™Šğ�™ˆ ğ�˜½ğ�™�ğ�™”ğ�™€ğ�™�</h1>
+        
+        <!-- TNG E-Wallet -->
+        <div class="payment-method">
+            <div class="payment-header">
+                <div class="payment-logo" style="color: #00a2ff;">
+                    <i class="fas fa-wallet" aria-hidden="true"></i>
+                </div>
+                <div class="payment-name">ğ�™�ğ�™‰ğ�™‚ ğ�™€-ğ�™’ğ�˜¼ğ�™‡ğ�™‡ğ�™€ğ�™�/ğ�˜¿ğ�™�ğ�™„ğ�™� ğ�™‰ğ�™Šğ�™’</div>
+            </div>
+            <div class="payment-details">
+                <div class="payment-number">141118363244</div>
+                <button class="copy-btn" data-number="141118363244">Salin Nomor</button>
+            </div>
+        </div>
+        
+        <!-- Bank Islam -->
+        <div class="payment-method">
+            <div class="payment-header">
+                <div class="payment-logo" style="color: #00aa5b;">
+                    <i class="fab fa-google-wallet" aria-hidden="true"></i>
+                </div>
+                <div class="payment-name">ğ�˜½ğ�˜¼ğ�™‰ğ�™† ğ�™„ğ�™�ğ�™‡ğ�˜¼ğ�™ˆ</div>
+            </div>
+            <div class="payment-details">
+                <div class="payment-number unavailable">03063028894106</div>
+            </div>
+        </div>
+        
+        <!-- Bank BSN -->
+        <div class="payment-method">
+            <div class="payment-header">
+                <div class="payment-logo" style="color: #7232bd;">
+                    <i class="fas fa-credit-card" aria-hidden="true"></i>
+                </div>
+                <div class="payment-name">ğ�˜½ğ�˜¼ğ�™‰ğ�™† ğ�˜½ğ�™�ğ�™‰</div>
+            </div>
+            <div class="payment-details">
+                <div class="payment-number unavailable">0302041100055801</div>
+            </div>
+        </div>
+        
+        <!-- QRIS -->
+        <div class="payment-method">
+            <div class="payment-header">
+                <div class="payment-logo" style="color: #ff0000;">
+                    <i class="fas fa-qrcode" aria-hidden="true"></i>
+                </div>
+                <div class="payment-name">SATU QR SEMUA PEMBAYARAN</div>
+            </div>
+            <div class="qris-container">
+                <img src="https://files.catbox.moe/9vl9kj.jpg" alt="QR Code for Payment" class="qris-image" loading="lazy">
+                <div class="qris-buttons">
+                    <button class="qris-btn" id="download-qris">Download</button>
+                    <button class="qris-btn" id="zoom-qris">Perbesar</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Contacts Section -->
+        <div class="contacts-section">
+            <h2 class="contacts-title">ğ�™²ğ�š˜ğ�š—ğ�š�ğ�šŠğ�šŒğ�š�ğ�šœ</h2>
+            <div class="contact-links">
+                <a href="https://wa.me/601139183035" class="contact-link" target="_blank" rel="noopener noreferrer" aria-label="WhatsApp">
+                    <div class="payment-logo" style="color: #25d366;">
+                        <i class="fab fa-whatsapp" aria-hidden="true"></i>
+                    </div>
+                    <div class="contact-text">WhatsApp</div>
+                </a>
+                <a href="https://t.me/ManForceX_Official" class="contact-link" target="_blank" rel="noopener noreferrer" aria-label="Telegram">
+                    <div class="payment-logo" style="color: #0088cc;">
+                        <i class="fab fa-telegram" aria-hidden="true"></i>
+                    </div>
+                    <div class="contact-text">Telegram</div>
+                </a>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Toast Notification -->
+    <div class="toast" id="toast" role="alert" aria-live="polite"></div>
+    
+    <!-- QRIS Modal -->
+    <div id="qris-modal" role="dialog" aria-modal="true" aria-label="QR Code Zoom">
+        <div class="modal-container">
+            <img src="https://files.catbox.moe/9vl9kj.jpg" alt="Zoomed QR Code" loading="lazy">
+            <button id="close-modal" aria-label="Close modal">Ã—</button>
+        </div>
+    </div>
+    
+    <script>
+        // Initialize elements
+        const audio = document.getElementById('background-audio');
+        const audioCtrl = document.getElementById('audio-control');
+        const loadingScreen = document.getElementById('loading-screen');
+        const welcomeScreen = document.getElementById('welcome-screen');
+        const paymentScreen = document.getElementById('payment-screen');
+        const goToPayBtn = document.getElementById('go-to-pay-btn');
+        const toast = document.getElementById('toast');
+        const qrisModal = document.getElementById('qris-modal');
+        
+        // Loading Simulation
+        let progress = 0;
+        const progressBar = document.getElementById('game-progress');
+        const progressPercent = document.getElementById('progress-percent');
+        const loadingStatus = document.getElementById('loading-status');
+        const loadingTip = document.getElementById('loading-tip');
+        
+        const tips = [
+            "Preparing secure payment environment...",
+            "Loading payment gateways...",
+            "Initializing encryption...",
+            "Connecting to secure servers..."
+        ];
+        
+        const loadingInterval = setInterval(() => {
+            // Update progress
+            progress += Math.random() * 15;
+            if (progress >= 100) {
+                progress = 100;
+                clearInterval(loadingInterval);
+                
+                // Complete loading
+                loadingStatus.textContent = "Ready!";
+                loadingTip.textContent = "Payment system loaded successfully!";
+                
+                setTimeout(() => {
+                    loadingScreen.style.opacity = '0';
+                    setTimeout(() => {
+                        loadingScreen.style.display = 'none';
+                        welcomeScreen.style.display = 'flex';
+                    }, 500);
+                }, 500);
+            }
+            
+            // Update UI
+            progressBar.style.width = progress + '%';
+            progressPercent.textContent = Math.floor(progress) + '%';
+            
+            // Update status and tip
+            if (progress < 30) loadingStatus.textContent = "Initializing...";
+            else if (progress < 60) loadingStatus.textContent = "Loading modules...";
+            else if (progress < 90) loadingStatus.textContent = "Finalizing...";
+            
+            // Random tip
+            if (Math.random() < 0.1) {
+                loadingTip.textContent = tips[Math.floor(Math.random() * tips.length)];
+            }
+        }, 150);
+        
+        // Navigation
+        goToPayBtn.addEventListener('click', () => {
+            welcomeScreen.style.display = 'none';
+            paymentScreen.style.display = 'block';
+            
+            // Try to play audio
+            const playAudio = () => {
+                audio.play().catch(e => {
+                    console.log("Audio autoplay blocked:", e);
+                });
+            };
+            
+            // Attempt to play on user interaction
+            playAudio();
+            
+            // Scroll to top
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        });
+        
+        // Audio Control
+        let isMuted = false;
+        audioCtrl.addEventListener('click', () => {
+            isMuted = !isMuted;
+            audio.muted = isMuted;
+            audioCtrl.innerHTML = isMuted 
+                ? '<i class="fas fa-volume-mute"></i>' 
+                : '<i class="fas fa-volume-up"></i>';
+            
+            // Provide feedback
+            showToast(isMuted ? "Audio dimatikan" : "Audio dihidupkan");
+        });
+        
+        // Copy Function
+        const copyButtons = document.querySelectorAll('.copy-btn');
+        copyButtons.forEach(btn => {
+            btn.addEventListener('click', async () => {
+                const number = btn.dataset.number;
+                try {
+                    await navigator.clipboard.writeText(number);
+                    showToast('Nomor berhasil disalin!');
+                } catch (err) {
+                    // Fallback for older browsers
+                    const textArea = document.createElement('textarea');
+                    textArea.value = number;
+                    document.body.appendChild(textArea);
+                    textArea.select();
+                    document.execCommand('copy');
+                    document.body.removeChild(textArea);
+                    showToast('Nomor berhasil disalin!');
+                }
+            });
+        });
+        
+        // QRIS Functions
+        document.getElementById('download-qris').addEventListener('click', () => {
+            const link = document.createElement('a');
+            link.href = 'https://files.catbox.moe/9vl9kj.jpg';
+            link.download = 'QRIS_MannForceX.jpg';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            showToast('QRIS berhasil diunduh!');
+        });
+        
+        document.getElementById('zoom-qris').addEventListener('click', () => {
+            qrisModal.style.display = 'flex';
+            document.body.style.overflow = 'hidden';
+        });
+        
+        document.getElementById('close-modal').addEventListener('click', () => {
+            qrisModal.style.display = 'none';
+            document.body.style.overflow = 'auto';
+        });
+        
+        // Close modal on ESC key
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && qrisModal.style.display === 'flex') {
+                qrisModal.style.display = 'none';
+                document.body.style.overflow = 'auto';
+            }
+        });
+        
+        // Close modal on background click
+        qrisModal.addEventListener('click', (e) => {
+            if (e.target === qrisModal) {
+                qrisModal.style.display = 'none';
+                document.body.style.overflow = 'auto';
+            }
+        });
+        
+        // Toast Notification Function
+        function showToast(message) {
+            toast.textContent = message;
+            toast.classList.add('show');
+            
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 2000);
+        }
+        
+        // Error handling for video
+        const video = document.getElementById('background-video');
+        video.addEventListener('error', () => {
+            console.log("Video failed to load");
+            video.style.display = 'none';
+        });
+        
+        // Preload important resources
+        window.addEventListener('load', () => {
+            // Preload QRIS image
+            const qrisImg = new Image();
+            qrisImg.src = 'https://files.catbox.moe/9vl9kj.jpg';
+        });
+    </script>
+</body>
+</html>
